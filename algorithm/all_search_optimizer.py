@@ -2,7 +2,6 @@ import time
 
 import numpy as np
 import numba
-from tqdm import tqdm
 
 from algorithm.base_route_optimizer import calc_route_length_f4
 from algorithm.base_route_optimizer import BaseRouteOptimizer
@@ -17,7 +16,7 @@ class AllSearchOptimizer(BaseRouteOptimizer):
     def optimize(self) -> route_result.RouteResult:
         sliced_arr = self.slice_by_search_mode()
         perm_obj, total_num = self.get_sliced_perm_by_search_mode()
-        perm_arr = self.perm_to_arr(perm_obj, len(sliced_arr), total_num)
+        perm_arr = self.perm_to_arr(perm_obj)
 
         start = time.time()
         min_order, min_length = self._optimize(sliced_arr, perm_arr)
@@ -26,11 +25,11 @@ class AllSearchOptimizer(BaseRouteOptimizer):
         return route_result.RouteResult(self.arr, min_order, min_length, elapsed)
 
     @staticmethod
-    def perm_to_arr(perm_obj, data_length: int, perm_length: int) -> np.ndarray:
+    def perm_to_arr(perm_obj) -> np.ndarray:
         return np.array(list(perm_obj), dtype=np.int8)
 
     @staticmethod
-    @numba.jit("Tuple((i1[:], f8))(f4[:, :], i1[:, :])", cache=True, nopython=True)
+    @numba.jit("Tuple((i1[:], f8))(f4[:, :], i1[:, :])", nopython=True)
     def _optimize(sliced_arr: np.ndarray, orders: np.ndarray) -> tuple[np.ndarray, float]:
         min_order = None
         min_length = 1e100
