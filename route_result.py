@@ -10,5 +10,5 @@ class RouteResult:
     length: float
     search_time_sec: float
 
-    def get_path(self) -> np.ndarray:
+    def get_route(self) -> np.ndarray:
         return self.org_data[self.order]

@@ -2,6 +2,7 @@ import numpy as np
 
 from const import SearchMode
 from algorithm.all_search_optimizer import AllSearchOptimizer
+import plot
 
 
 def gen_data(num: int, dim: int) -> np.ndarray:
@@ -13,3 +14,4 @@ if __name__ == "__main__":
     optim = AllSearchOptimizer(data, SearchMode.FREE)
     ret = optim.optimize()
     print(ret)
+    plot.plot(ret.get_route())
