@@ -31,7 +31,7 @@ def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
         return order
     if search_mode_int == 1:
         # FIX_STAR
-        order_list = List(order + 1)
+        order_list = List(order)
         order_list.insert(0, 0)
         return np.array(list(order_list), dtype=np.int8)
     if search_mode_int == 2:
@@ -40,7 +40,7 @@ def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
         order_list.append(len(order_list))
         return np.array(list(order_list), dtype=np.int8)
     # FIX_START_GOAL
-    order_list = List(order + 1)
+    order_list = List(order)
     order_list.insert(0, 0)
     order_list.append(len(order_list))
     return np.array(list(order_list), dtype=np.int8)
@@ -56,14 +56,14 @@ class BaseRouteOptimizer(metaclass=abc.ABCMeta):
         pass
 
     def get_sliced_perm_by_search_mode(self) -> tuple[it.permutations, int]:
-        actual_size = len(self.arr) - 2
+        size = len(self.arr)
         if self.search_mode == SearchMode.FREE:
-            actual_size = len(self.arr)
+            return it.permutations(range(size)), math.factorial(size)
         if self.search_mode == SearchMode.FIX_START:
-            actual_size = len(self.arr) - 1
+            return it.permutations(range(1, size)), math.factorial(size - 1)
         if self.search_mode == SearchMode.FIX_GOAL:
-            actual_size = len(self.arr) - 1
-        return it.permutations(range(actual_size)), math.factorial(actual_size)
+            return it.permutations(range(size - 1)), math.factorial(size - 1)
+        return it.permutations(range(1, size - 1)), math.factorial(size - 2)
 
     @staticmethod
     def reconst_full_orders(orders: np.ndarray, search_mode_int: int) -> np.ndarray:

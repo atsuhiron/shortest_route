@@ -11,13 +11,13 @@ from const import SearchMode
 
 
 @numba.jit("Tuple((i1[:], f8))(f4[:, :], i1[:, :], i8)", nopython=True)
-def _optimize(sliced_arr: np.ndarray, orders: np.ndarray, search_mode: int) -> tuple[np.ndarray, float]:
+def _optimize(arr: np.ndarray, orders: np.ndarray, search_mode: int) -> tuple[np.ndarray, float]:
     min_order = None
     min_length = 1e100
 
     for order in orders:
         order = reconst_full_order(order, search_mode)
-        length = calc_route_length_f4(sliced_arr, order)
+        length = calc_route_length_f4(arr, order)
 
         if length < min_length:
             min_length = length
