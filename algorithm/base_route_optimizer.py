@@ -53,13 +53,13 @@ class BaseRouteOptimizer(metaclass=abc.ABCMeta):
             return list(order)
         if self.search_mode == SearchMode.FIX_START:
             order_list = list(order + 1)
-            order_list.insert(0, len(order_list))
+            order_list.insert(0, 0)
             return order_list
         if self.search_mode == SearchMode.FIX_GOAL:
             order_list = list(order)
             order_list.append(len(order_list))
             return order_list
         order_list = list(order + 1)
-        order_list.insert(0, len(order_list))
+        order_list.insert(0, 0)
         order_list.append(len(order_list))
         return order_list
