@@ -10,7 +10,7 @@ import route_result
 from const import SearchMode
 
 
-@numba.jit("Tuple((i1[:], f8))(f4[:, :], i1[:, :], i8)", nopython=True)
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:, :], i8)", nopython=True)
 def _optimize(arr: np.ndarray, orders: np.ndarray, search_mode: int) -> tuple[np.ndarray, float]:
     min_order = None
     min_length = 1e100
@@ -41,4 +41,4 @@ class AllSearchOptimizer(BaseRouteOptimizer):
 
     @staticmethod
     def perm_to_arr(perm_obj) -> np.ndarray:
-        return np.array(list(perm_obj), dtype=np.int8)
+        return np.array(list(perm_obj), dtype=np.uint8)

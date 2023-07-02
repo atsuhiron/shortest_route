@@ -10,7 +10,7 @@ import route_result
 from const import SearchMode
 
 
-@numba.jit("f8(f4[:,:], i1[:])", cache=True, nopython=True)
+@numba.jit("f8(f4[:,:], u1[:])", cache=True, nopython=True)
 def calc_route_length_f4(arr: np.ndarray, order: np.ndarray) -> float:
     arr = arr[order]
     edge_vecs = arr[1:] - arr[:-1]
@@ -21,7 +21,7 @@ def calc_route_length_f4(arr: np.ndarray, order: np.ndarray) -> float:
     return float(sum(edge_norms))
 
 
-@numba.jit("i1[:](i1[:], i8)", nopython=True)
+@numba.jit("u1[:](u1[:], i8)", nopython=True)
 def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
     """
     Reconstruct an order.
@@ -33,17 +33,17 @@ def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
         # FIX_STAR
         order_list = List(order)
         order_list.insert(0, 0)
-        return np.array(list(order_list), dtype=np.int8)
+        return np.array(list(order_list), dtype=np.uint8)
     if search_mode_int == 2:
         # FIX_GOAL
         order_list = List(order)
         order_list.append(len(order_list))
-        return np.array(list(order_list), dtype=np.int8)
+        return np.array(list(order_list), dtype=np.uint8)
     # FIX_START_GOAL
     order_list = List(order)
     order_list.insert(0, 0)
     order_list.append(len(order_list))
-    return np.array(list(order_list), dtype=np.int8)
+    return np.array(list(order_list), dtype=np.uint8)
 
 
 class BaseRouteOptimizer(metaclass=abc.ABCMeta):
