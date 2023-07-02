@@ -6,7 +6,7 @@ import numpy as np
 @dataclasses.dataclass
 class RouteResult:
     org_data: np.ndarray
-    order: list[int]
+    order: np.ndarray
     length: float
     search_time_sec: float
 

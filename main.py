@@ -12,7 +12,7 @@ def gen_data(num: int, dim: int, seed=None) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    data = gen_data(9, 2, 1111)
+    data = gen_data(10, 2, 1111)
     optim = AllSearchOptimizer(data, SearchMode.FIX_START_GOAL)
     ret = optim.optimize()
     print(ret)

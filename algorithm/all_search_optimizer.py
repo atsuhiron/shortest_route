@@ -14,14 +14,14 @@ class AllSearchOptimizer(BaseRouteOptimizer):
         super().__init__(arr, search_mode)
 
     def optimize(self) -> route_result.RouteResult:
-        sliced_arr = self.slice_by_search_mode()
         perm_obj, total_num = self.get_sliced_perm_by_search_mode()
         perm_arr = self.perm_to_arr(perm_obj)
+        full_perm_arr = self.reconst_full_orders(perm_arr, self.search_mode.value)
 
         start = time.time()
-        min_order, min_length = self._optimize(sliced_arr, perm_arr)
+        min_order, min_length = self._optimize(self.arr, full_perm_arr)
         elapsed = time.time() - start
-        min_order = self.reconst_full_order(min_order)
+
         return route_result.RouteResult(self.arr, min_order, min_length, elapsed)
 
     @staticmethod
