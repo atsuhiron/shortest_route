@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 import numba
+from numba.typed import List
 
 import route_result
 from const import SearchMode
@@ -18,6 +19,31 @@ def calc_route_length_f4(arr: np.ndarray, order: np.ndarray) -> float:
     for ii in range(len(edge_vecs)):
         edge_norms[ii] = np.sqrt(np.sum(np.square(edge_vecs[ii])))
     return float(sum(edge_norms))
+
+
+@numba.jit("i1[:](i1[:], i8)", nopython=True)
+def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
+    """
+    Reconstruct an order.
+    """
+    if search_mode_int == 0:
+        # FREE
+        return order
+    if search_mode_int == 1:
+        # FIX_STAR
+        order_list = List(order + 1)
+        order_list.insert(0, 0)
+        return np.array(list(order_list), dtype=np.int8)
+    if search_mode_int == 2:
+        # FIX_GOAL
+        order_list = List(order)
+        order_list.append(len(order_list))
+        return np.array(list(order_list), dtype=np.int8)
+    # FIX_START_GOAL
+    order_list = List(order + 1)
+    order_list.insert(0, 0)
+    order_list.append(len(order_list))
+    return np.array(list(order_list), dtype=np.int8)
 
 
 class BaseRouteOptimizer(metaclass=abc.ABCMeta):

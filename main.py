@@ -12,8 +12,8 @@ def gen_data(num: int, dim: int, seed=None) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    data = gen_data(10, 2, 1111)
-    optim = AllSearchOptimizer(data, SearchMode.FIX_START_GOAL)
+    data = gen_data(9, 2, 1111)
+    optim = AllSearchOptimizer(data, SearchMode.FREE)
     ret = optim.optimize()
     print(ret)
     plot.plot(ret.get_route())
