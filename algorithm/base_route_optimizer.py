@@ -32,17 +32,17 @@ def reconst_full_order(order: np.ndarray, search_mode_int: int) -> np.ndarray:
     if search_mode_int == 1:
         # FIX_STAR
         order_list = List(order)
-        order_list.insert(0, 0)
+        order_list.insert(0, np.uint8(0))
         return np.array(list(order_list), dtype=np.uint8)
     if search_mode_int == 2:
         # FIX_GOAL
         order_list = List(order)
-        order_list.append(len(order_list))
+        order_list.append(np.uint8(len(order_list)))
         return np.array(list(order_list), dtype=np.uint8)
     # FIX_START_GOAL
     order_list = List(order)
-    order_list.insert(0, 0)
-    order_list.append(len(order_list))
+    order_list.insert(0, np.uint8(0))
+    order_list.append(np.uint8(len(order_list)))
     return np.array(list(order_list), dtype=np.uint8)
 
 
