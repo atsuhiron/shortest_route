@@ -10,7 +10,7 @@ import route_result
 from const import SearchMode
 
 
-@numba.jit("f8(f4[:,:], u1[:])", cache=True, nopython=True)
+@numba.jit("f8(f4[:,:], u1[:])", nopython=True)
 def calc_route_length_f4(arr: np.ndarray, order: np.ndarray) -> float:
     arr = arr[order]
     edge_vecs = arr[1:] - arr[:-1]

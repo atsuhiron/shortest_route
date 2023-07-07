@@ -12,14 +12,14 @@ import route_result
 from const import SearchMode
 
 
-@numba.jit("u1[:](u1[:], u1, u1)", cache=True, nopython=True)
+@numba.jit("u1[:](u1[:], u1, u1)", nopython=True)
 def two_opt(arr: np.ndarray, idx1: int, idx2: int):
     copied = arr.copy()
     copied[idx1], copied[idx2] = arr[idx2], arr[idx1]
     return copied
 
 
-@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", cache=True, nopython=True)
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True)
 def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
     min_order = init_order
     min_length = calc_route_length_f4(arr, min_order)
