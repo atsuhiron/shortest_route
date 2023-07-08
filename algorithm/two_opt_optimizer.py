@@ -6,14 +6,13 @@ import numba
 import tqdm
 
 from algorithm.base_route_optimizer import calc_route_length_f4
-from algorithm.base_route_optimizer import reconst_full_order
 from algorithm.base_route_optimizer import BaseRouteOptimizer
 import route_result
 from const import SearchMode
 
 
 @numba.jit("u1[:](u1[:], u1, u1)", nopython=True)
-def two_opt(arr: np.ndarray, idx1: int, idx2: int):
+def _two_opt(arr: np.ndarray, idx1: int, idx2: int):
     copied = arr.copy()
     copied[idx1], copied[idx2] = arr[idx2], arr[idx1]
     return copied
@@ -29,7 +28,7 @@ def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray)
         np.random.shuffle(check_index)
 
         for idx in check_index:
-            swapped_order = two_opt(min_order, opt_patterns[idx, 0], opt_patterns[idx, 1])
+            swapped_order = _two_opt(min_order, opt_patterns[idx, 0], opt_patterns[idx, 1])
             swapped_length = calc_route_length_f4(arr, swapped_order)
             if swapped_length < min_length:
                 min_length = swapped_length
@@ -56,9 +55,10 @@ class TwoOptOptimizer(BaseRouteOptimizer):
             _min_order, _min_length = _optimize(self.arr, init_orders[ii], opt_patterns)
             min_orders.append(_min_order)
             min_lengths.append(_min_length)
-        elapsed = time.time() - start
 
         min_init_idx = np.argmin(min_lengths)
+        elapsed = time.time() - start
+
         return route_result.RouteResult(self.arr, min_orders[min_init_idx], min_lengths[min_init_idx], elapsed)
 
     def gen_init_orders(self) -> np.ndarray:

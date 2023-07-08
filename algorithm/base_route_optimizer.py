@@ -84,3 +84,7 @@ class BaseRouteOptimizer(metaclass=abc.ABCMeta):
         orders += 1
         orders = np.insert(orders, 0, 0, axis=1)
         return np.insert(orders, len(orders[0]), len(orders[0]), axis=1)
+
+    @staticmethod
+    def calc_chunk_size(total_num: int, proc_num: int):
+        return min(max(int(total_num / proc_num / 100), 1), 1000)

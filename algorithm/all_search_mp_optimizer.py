@@ -33,7 +33,7 @@ class AllSearchMPOptimizer(BaseRouteOptimizer):
         length_arr = np.empty(total_num, dtype=np.float32)
 
         start = time.time()
-        cs = min(max(int(total_num / self.proc_num / 100), 1), 1000)
+        cs = self.calc_chunk_size(total_num, self.proc_num)
         print(f"chunksize={cs}")
 
         with Pool(self.proc_num) as pool:
