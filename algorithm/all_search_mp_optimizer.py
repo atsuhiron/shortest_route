@@ -1,7 +1,7 @@
 from typing import Generator
-
 import time
 from multiprocessing.pool import Pool
+import warnings
 
 import numpy as np
 import numba
@@ -12,9 +12,7 @@ from algorithm.base_route_optimizer import BaseRouteOptimizer
 import route_result
 from const import SearchMode
 
-"""
-Too late :(
-"""
+warnings.warn("This class has bad performance.")
 
 
 @numba.jit("Tuple((f8, i8))(Tuple((f4[:, :], u1[:], i8, i8)))", nopython=True, nogil=True)
