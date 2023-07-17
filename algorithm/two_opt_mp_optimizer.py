@@ -41,9 +41,10 @@ def _optimize(args: tuple[np.ndarray, np.ndarray, np.ndarray, int]) -> tuple[np.
 
 
 class TwoOptMPOptimizer(TwoOptOptimizer):
-    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int, proc_num: int):
+    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int, proc_num: int, verbose: bool = True):
         super().__init__(arr, search_mode, init_num)
         self.proc_num = proc_num
+        self.verbose = verbose
 
     def optimize(self) -> route_result.RouteResult:
         init_orders = self.gen_init_orders()
@@ -51,7 +52,9 @@ class TwoOptMPOptimizer(TwoOptOptimizer):
 
         start = time.time()
         cs = self.calc_chunk_size(self.init_num, self.proc_num)
-        print(f"chunksize={cs}")
+        if self.verbose:
+            print(f"chunksize={cs}")
+
         min_orders = np.empty((self.init_num, len(self.arr)), dtype=np.uint8)
         min_lengths = np.empty(self.init_num, dtype=np.float32)
         with Pool(self.proc_num) as pool:
