@@ -11,6 +11,7 @@ from algorithm.two_opt_mp_optimizer import TwoOptMPOptimizer
 
 _SAMPLE_DIR = "sample_points"
 _POINT_NUMS = [20, 30, 40, 50, 60, 70, 80, 90, 100]
+_INIT_NUMS = [20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 
 
 def _get_sample_name(num: int) -> str:
@@ -43,7 +44,15 @@ def _plot_time_benchmark(result_dict: dict[str, list]):
     plt.show()
 
 
-def run_time_benchmark(trial_num: int, init_num: int | list[int]):
+def _plot_length_benchmark(result_dict: dict[str, list]):
+    plt.errorbar(result_dict["init_nums"], result_dict["length_avg"], result_dict["length_std"], fmt="o")
+    plt.xlabel("Number of initial num")
+    plt.ylabel("length")
+    plt.xscale("log")
+    plt.show()
+
+
+def run_time_benchmark(trial_num: int, init_num: int | list[int]) -> dict[str, list]:
     sample_size = len(_POINT_NUMS)
     if isinstance(trial_num, list):
         assert len(trial_num) == sample_size, f"The length of list of trial number must be {sample_size}"
@@ -70,7 +79,32 @@ def run_time_benchmark(trial_num: int, init_num: int | list[int]):
     benchmark_res = {"points": _POINT_NUMS,
                      "time_avg": [float(trials[1:].mean()) for trials in time_record],
                      "time_std": [float(trials[1:].std()) for trials in time_record],
-                     "length_mean": [float(trials.mean()) for trials in length_record],
+                     "length_avg": [float(trials.mean()) for trials in length_record],
                      "length_std": [float(trials.std()) for trials in length_record]}
     _plot_time_benchmark(benchmark_res)
+    return benchmark_res
+
+
+def run_length_benchmark(point_num: int, trial_num: int) -> dict[str, list]:
+    sample_size = len(_INIT_NUMS)
+
+    proc_num = os.cpu_count() // 2
+    length_record = np.zeros((sample_size, trial_num))
+
+    try:
+        arr = np.load(_get_sample_name(point_num))
+    except FileNotFoundError:
+        arr = np.random.random((point_num, 2)).astype(np.float32)
+
+    with Pool(proc_num) as pool:
+        for si in tqdm(range(sample_size), desc="All"):
+            for ti in tqdm(range(trial_num), desc=f"init_num {_INIT_NUMS[si]}", leave=False):
+                optim = TwoOptMPOptimizer(arr, SearchMode.FREE, _INIT_NUMS[si], proc_num, pool, False)
+                result = optim.optimize()
+                length_record[si, ti] = result.length
+
+    benchmark_res = {"init_nums": _INIT_NUMS,
+                     "length_avg": [float(trials.mean()) for trials in length_record],
+                     "length_std": [float(trials.std()) for trials in length_record]}
+    _plot_length_benchmark(benchmark_res)
     return benchmark_res
