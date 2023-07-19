@@ -1,8 +1,10 @@
 import os
 import shutil
+from multiprocessing.pool import Pool
 
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from algorithm.base_route_optimizer import SearchMode
 from algorithm.two_opt_mp_optimizer import TwoOptMPOptimizer
@@ -34,7 +36,14 @@ def _create_sample_arrays(dim: int = 2, override: bool = False):
         np.save(_get_sample_name(point_num), ra)
 
 
-def run_benchmark(trial_num: int, init_num: int | list[int]):
+def _plot_time_benchmark(result_dict: dict[str, list]):
+    plt.errorbar(result_dict["points"], result_dict["time_avg"], result_dict["time_std"], fmt="o")
+    plt.xlabel("Number of point")
+    plt.ylabel("time [s]")
+    plt.show()
+
+
+def run_time_benchmark(trial_num: int, init_num: int | list[int]):
     sample_size = len(_POINT_NUMS)
     if isinstance(trial_num, list):
         assert len(trial_num) == sample_size, f"The length of list of trial number must be {sample_size}"
@@ -49,17 +58,19 @@ def run_benchmark(trial_num: int, init_num: int | list[int]):
     time_record = [np.zeros(trial_num[si]) for si in range(sample_size)]
     length_record = [np.zeros(trial_num[si]) for si in range(sample_size)]
 
-    for si in tqdm(range(sample_size), desc="All"):
-        arr = np.load(_get_sample_name(_POINT_NUMS[si]))
-        for ti in tqdm(range(trial_num[si]), desc=f"sample {_POINT_NUMS[si]}", leave=False):
-            optim = TwoOptMPOptimizer(arr, SearchMode.FREE, init_num[si], proc_num, False)
-            result = optim.optimize()
-            time_record[si][ti] = result.search_time_sec
-            length_record[si][ti] = result.length
+    with Pool(proc_num) as pool:
+        for si in tqdm(range(sample_size), desc="All"):
+            arr = np.load(_get_sample_name(_POINT_NUMS[si]))
+            for ti in tqdm(range(trial_num[si]), desc=f"sample {_POINT_NUMS[si]}", leave=False):
+                optim = TwoOptMPOptimizer(arr, SearchMode.FREE, init_num[si], proc_num, pool, False)
+                result = optim.optimize()
+                time_record[si][ti] = result.search_time_sec
+                length_record[si][ti] = result.length
 
     benchmark_res = {"points": _POINT_NUMS,
-                     "time_avg": [float(trials.mean()) for trials in time_record],
-                     "time_std": [float(trials.std()) for trials in time_record],
+                     "time_avg": [float(trials[1:].mean()) for trials in time_record],
+                     "time_std": [float(trials[1:].std()) for trials in time_record],
                      "length_mean": [float(trials.mean()) for trials in length_record],
                      "length_std": [float(trials.std()) for trials in length_record]}
+    _plot_time_benchmark(benchmark_res)
     return benchmark_res

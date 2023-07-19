@@ -23,9 +23,10 @@ def _optimize_single(arg: tuple[np.ndarray, np.ndarray, int, int]) -> tuple[floa
 
 
 class AllSearchMPOptimizer(BaseRouteOptimizer):
-    def __init__(self, arr: np.ndarray, search_mode: SearchMode, proc_num: int):
+    def __init__(self, arr: np.ndarray, search_mode: SearchMode, proc_num: int, pool: Pool = None):
         super().__init__(arr, search_mode)
         self.proc_num = proc_num
+        self.pool = pool
 
     def optimize(self) -> route_result.RouteResult:
         perm_obj, total_num = self.get_sliced_perm_by_search_mode()
@@ -36,8 +37,13 @@ class AllSearchMPOptimizer(BaseRouteOptimizer):
         cs = self.calc_chunk_size(total_num, self.proc_num)
         print(f"chunksize={cs}")
 
-        with Pool(self.proc_num) as pool:
-            for ret in pool.imap_unordered(_optimize_single, self.gen_args(perm_arr), chunksize=cs):
+        if self.pool is None:
+            with Pool(self.proc_num) as pool:
+                for ret in pool.imap_unordered(_optimize_single, self.gen_args(perm_arr), chunksize=cs):
+                    length, index = ret
+                    length_arr[index] = length
+        else:
+            for ret in self.pool.imap_unordered(_optimize_single, self.gen_args(perm_arr), chunksize=cs):
                 length, index = ret
                 length_arr[index] = length
 

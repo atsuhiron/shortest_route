@@ -41,10 +41,12 @@ def _optimize(args: tuple[np.ndarray, np.ndarray, np.ndarray, int]) -> tuple[np.
 
 
 class TwoOptMPOptimizer(TwoOptOptimizer):
-    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int, proc_num: int, verbose: bool = True):
+    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int, proc_num: int, pool: Pool = None,
+                 verbose: bool = True):
         super().__init__(arr, search_mode, init_num)
         self.proc_num = proc_num
         self.verbose = verbose
+        self.pool = pool
 
     def optimize(self) -> route_result.RouteResult:
         init_orders = self.gen_init_orders()
@@ -57,8 +59,14 @@ class TwoOptMPOptimizer(TwoOptOptimizer):
 
         min_orders = np.empty((self.init_num, len(self.arr)), dtype=np.uint8)
         min_lengths = np.empty(self.init_num, dtype=np.float32)
-        with Pool(self.proc_num) as pool:
-            for ret in pool.imap_unordered(_optimize, self.gen_args(init_orders, opt_patterns), cs):
+        if self.pool is None:
+            with Pool(self.proc_num) as pool:
+                for ret in pool.imap_unordered(_optimize, self.gen_args(init_orders, opt_patterns), cs):
+                    _min_order, _min_length, index = ret
+                    min_orders[index] = _min_order
+                    min_lengths[index] = _min_length
+        else:
+            for ret in self.pool.imap_unordered(_optimize, self.gen_args(init_orders, opt_patterns), cs):
                 _min_order, _min_length, index = ret
                 min_orders[index] = _min_order
                 min_lengths[index] = _min_length
