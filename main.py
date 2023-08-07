@@ -19,9 +19,9 @@ if __name__ == "__main__":
     __spec__ = None
     data = gen_data(13, 2, 53)
     # optim = AllSearchOptimizer(data, SearchMode.FIX_START_GOAL)
-    optim = AllSearchOptimizerLowMem(data, SearchMode.FIX_START_GOAL)
-    # optim = AllSearchNGMTChunkOptimizer(data, SearchMode.FIX_START_GOAL, proc_num=10)
-    # optim = TwoOptOptimizer(data, SearchMode.FIX_START_GOAL, 5000)
+    # optim = AllSearchOptimizerLowMem(data, SearchMode.FIX_START_GOAL)
+    # optim = AllSearchNGMTChunkOptimizer(data, SearchMode.FIX_START_GOAL, 24)
+    optim = TwoOptOptimizer(data, SearchMode.FIX_START_GOAL, 500)
     # optim = TwoOptMPOptimizer(data, SearchMode.FIX_START_GOAL, 5000, proc_num=10)
     ret = optim.optimize()
     print(ret)

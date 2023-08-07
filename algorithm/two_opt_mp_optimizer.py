@@ -5,8 +5,8 @@ from multiprocessing.pool import Pool
 import numpy as np
 import numba
 
-from algorithm.base_route_optimizer import calc_route_length_f4
 from algorithm.two_opt_optimizer import TwoOptOptimizer
+from algorithm.two_opt_optimizer import optimize_core
 import route_result
 from const import SearchMode
 
@@ -21,22 +21,7 @@ def _two_opt(arr: np.ndarray, idx1: int, idx2: int):
 @numba.jit("Tuple((u1[:], f8, i8))(Tuple((f4[:, :], u1[:], u1[:, :], i8)))", nopython=True)
 def _optimize(args: tuple[np.ndarray, np.ndarray, np.ndarray, int]) -> tuple[np.ndarray, float, int]:
     arr, init_order, opt_patterns, index = args
-    min_order = init_order
-    min_length = calc_route_length_f4(arr, min_order)
-
-    while True:
-        check_index = np.arange(len(opt_patterns)).astype(np.uint8)
-        np.random.shuffle(check_index)
-
-        for idx in check_index:
-            swapped_order = _two_opt(min_order, opt_patterns[idx, 0], opt_patterns[idx, 1])
-            swapped_length = calc_route_length_f4(arr, swapped_order)
-            if swapped_length < min_length:
-                min_length = swapped_length
-                min_order = swapped_order
-                break
-        else:
-            break
+    min_order, min_length = optimize_core(arr, init_order, opt_patterns)
     return min_order, min_length, index
 
 

@@ -19,7 +19,7 @@ def _two_opt(arr: np.ndarray, idx1: int, idx2: int):
 
 
 @numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True)
-def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
+def optimize_core(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
     min_order = init_order
     min_length = calc_route_length_f4(arr, min_order)
 
@@ -37,6 +37,11 @@ def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray)
         else:
             break
     return min_order, min_length
+
+
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True)
+def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
+    return optimize_core(arr, init_order, opt_patterns)
 
 
 class TwoOptOptimizer(BaseRouteOptimizer):
