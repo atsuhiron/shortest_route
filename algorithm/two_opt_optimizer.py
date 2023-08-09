@@ -11,14 +11,14 @@ import route_result
 from const import SearchMode
 
 
-@numba.jit("u1[:](u1[:], u1, u1)", nopython=True)
+@numba.jit("u1[:](u1[:], u1, u1)", nopython=True, inline="always")
 def _two_opt(arr: np.ndarray, idx1: int, idx2: int):
     copied = arr.copy()
     copied[idx1], copied[idx2] = arr[idx2], arr[idx1]
     return copied
 
 
-@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True)
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True, inline="always")
 def optimize_core(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
     min_order = init_order
     min_length = calc_route_length_f4(arr, min_order)
@@ -39,25 +39,73 @@ def optimize_core(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndar
     return min_order, min_length
 
 
-@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :])", nopython=True)
-def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray) -> tuple[np.ndarray, float]:
+@numba.jit("b1(i8, f8, f8)", nopython=True, inline="always")
+def can_pass_over_potential(iter_count: int, delta_l: float, k: float) -> bool:
+    temp = np.exp(float(-iter_count) * k)
+    return temp > delta_l
+
+
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :], f8)", nopython=True, inline="always")
+def optimize_ann_core(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray, k: float) -> tuple[np.ndarray, float]:
+    min_order = init_order
+    min_length = calc_route_length_f4(arr, min_order)
+    iter_count = 0
+
+    while True:
+        iter_count += 1
+        check_index = np.arange(len(opt_patterns)).astype(np.uint8)
+        np.random.shuffle(check_index)
+
+        for idx in check_index:
+            swapped_order = _two_opt(min_order, opt_patterns[idx, 0], opt_patterns[idx, 1])
+            swapped_length = calc_route_length_f4(arr, swapped_order)
+            if swapped_length < min_length:
+                min_length = swapped_length
+                min_order = swapped_order
+                break
+
+            over_pot = can_pass_over_potential(iter_count, swapped_length - min_length, k)
+            if over_pot:
+                min_length = swapped_length
+                min_order = swapped_order
+                break
+
+        else:
+            break
+    return min_order, min_length
+
+
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :], f8)", nopython=True)
+def _optimize(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray, _) -> tuple[np.ndarray, float]:
     return optimize_core(arr, init_order, opt_patterns)
 
 
+@numba.jit("Tuple((u1[:], f8))(f4[:, :], u1[:], u1[:, :], f8)", nopython=True)
+def _optimize_ann(arr: np.ndarray, init_order: np.ndarray, opt_patterns: np.ndarray, k: float)\
+        -> tuple[np.ndarray, float]:
+    return optimize_ann_core(arr, init_order, opt_patterns, k)
+
+
 class TwoOptOptimizer(BaseRouteOptimizer):
-    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int):
+    def __init__(self, arr: np.ndarray, search_mode: SearchMode, init_num: int, k: float = 0):
         super().__init__(arr, search_mode)
         self.init_num = init_num
+        self.k = k
 
     def optimize(self) -> route_result.RouteResult:
         init_orders = self.gen_init_orders()
         opt_patterns = self.gen_all_opt_pattern()
 
+        if self.k <= 0:
+            optimize_func = _optimize
+        else:
+            optimize_func = _optimize_ann
+
         start = time.time()
         min_orders = []
         min_lengths = []
         for ii in tqdm.tqdm(range(self.init_num)):
-            _min_order, _min_length = _optimize(self.arr, init_orders[ii], opt_patterns)
+            _min_order, _min_length = optimize_func(self.arr, init_orders[ii], opt_patterns, self.k)
             min_orders.append(_min_order)
             min_lengths.append(_min_length)
 

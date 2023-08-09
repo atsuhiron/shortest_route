@@ -17,12 +17,12 @@ def gen_data(num: int, dim: int, seed=None) -> np.ndarray:
 
 if __name__ == "__main__":
     __spec__ = None
-    data = gen_data(13, 2, 53)
+    data = gen_data(20, 2, 53)
     # optim = AllSearchOptimizer(data, SearchMode.FIX_START_GOAL)
     # optim = AllSearchOptimizerLowMem(data, SearchMode.FIX_START_GOAL)
     # optim = AllSearchNGMTChunkOptimizer(data, SearchMode.FIX_START_GOAL, 24)
-    optim = TwoOptOptimizer(data, SearchMode.FIX_START_GOAL, 500)
-    # optim = TwoOptMPOptimizer(data, SearchMode.FIX_START_GOAL, 5000, proc_num=10)
+    # optim = TwoOptOptimizer(data, SearchMode.FIX_START_GOAL, 50, 1.8)
+    optim = TwoOptMPOptimizer(data, SearchMode.FIX_START_GOAL, 5000, proc_num=12, k=1.8)
     ret = optim.optimize()
     print(ret)
     plot.plot(ret.get_route())
